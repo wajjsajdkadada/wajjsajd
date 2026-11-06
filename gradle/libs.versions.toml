@@ -2,13 +2,14 @@
 # 说明：版本与本机已缓存的 Gradle/AGP/Kotlin 对齐（见 docs/05 §3 工具链基线）
 
 [versions]
-agp = "9.5.0"
+agp = "9.4.0"
 kotlin = "2.3.21"
+ksp = "2.3.13"
 coreKtx = "1.13.1"
 coroutines = "1.8.1"
 lifecycle = "2.8.7"
 activity = "1.9.3"
-room = "2.6.1"
+room = "2.8.5"
 junit = "4.13.2"
 
 [libraries]
@@ -16,6 +17,7 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx"
 androidx-activity = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
@@ -31,3 +33,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 # AGP 9 起 Kotlin 支持内置，Android 模块不可再 apply kotlin-android；仅纯 JVM 模块用 kotlin-jvm
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+# Room 注解处理走 KSP（比 kapt 快，且 Room 2.7+ 官方推荐）
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
+        android:name=".DanCiJiYiApp"
         android:allowBackup="true"
         android:label="单词记忆"
         android:supportsRtl="true"

@@ -17,5 +17,9 @@ java {
 }
 
 dependencies {
+    // 仓库接口签名用到 Flow，属于对外 API，故用 api 暴露给上层模块
+    api(libs.kotlinx.coroutines.core)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
