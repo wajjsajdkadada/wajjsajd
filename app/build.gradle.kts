@@ -1,0 +1,34 @@
+plugins {
+    // AGP 9 内置 Kotlin 支持，无需（也不允许）再 apply kotlin-android 插件
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace = "com.dancijiyi.app"
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId = "com.dancijiyi.app"
+        minSdk = 26
+        targetSdk = 37
+        versionCode = 1
+        versionName = "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation(project(":core-data"))
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity)
+}

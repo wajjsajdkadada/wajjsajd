@@ -1,5 +1,7 @@
 # ---- Gradle / 构建产物 ----
 .gradle/
+.gradle-home/
+.gradle-native/
 build/
 .kotlin/
 output-metadata.json
