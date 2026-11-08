@@ -15,7 +15,7 @@
         android:allowBackup="true"
         android:label="单词记忆"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.Light.DarkActionBar">
+        android:theme="@style/Theme.DanCiJiYi">
 
         <activity
             android:name=".MainActivity"

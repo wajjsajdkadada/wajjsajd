@@ -3,4 +3,6 @@
     <string name="widget_label">今日待复习</string>
     <string name="widget_description">显示今日还有多少单词待复习，点击可直接进入复习页</string>
     <string name="widget_empty">今日已完成</string>
+    <string name="widget_mark_reviewed">已复习</string>
+    <string name="widget_open_review">去复习 →</string>
 </resources>

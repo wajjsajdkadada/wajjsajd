@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  全局主题与组件样式。
+
+  说明：本项目用 View 体系（RecyclerView），没有引入 Material Components 库，
+  所以这里基于平台 Material 主题定制，只覆盖颜色与窗口动画，
+  不额外引入依赖（避免为了圆角按钮多拉一个 ~1MB 的库）。
+-->
+<resources>
+
+    <style name="Theme.DanCiJiYi" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/brand_primary</item>
+        <item name="android:colorPrimaryDark">@color/brand_primary_dark</item>
+        <item name="android:colorAccent">@color/accent_blue</item>
+        <item name="android:windowBackground">@color/surface_alt</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorHint">@color/text_tertiary</item>
+        <item name="android:windowAnimationStyle">@style/Animation.DanCiJiYi</item>
+        <item name="android:statusBarColor">@color/brand_primary_dark</item>
+    </style>
+
+    <!-- 页面切换动画：用平台自带的淡入淡出，避免自造 anim 文件 -->
+    <style name="Animation.DanCiJiYi" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@android:anim/fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityCloseExitAnimation">@android:anim/fade_out</item>
+    </style>
+
+    <!-- 主按钮：圆角 + 水波纹 + 去掉阴影（避免与圆角背景错位） -->
+    <style name="Widget.App.Button.Primary" parent="@android:style/Widget.Material.Button">
+        <item name="android:background">@drawable/bg_button_primary</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:paddingStart">@dimen/space_m</item>
+        <item name="android:paddingEnd">@dimen/space_m</item>
+    </style>
+
+    <!-- 次按钮：描边 + 深色文字 -->
+    <style name="Widget.App.Button.Secondary" parent="@android:style/Widget.Material.Button.Borderless">
+        <item name="android:background">@drawable/bg_button_secondary</item>
+        <item name="android:textColor">@color/brand_primary</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:minHeight">@dimen/touch_min</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- 文本层级 -->
+    <style name="TextAppearance.App.Caption" parent="@android:style/TextAppearance.Material.Caption">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+    </style>
+
+    <style name="TextAppearance.App.Title" parent="@android:style/TextAppearance.Material.Headline">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>

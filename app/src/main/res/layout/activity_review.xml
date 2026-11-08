@@ -209,28 +209,35 @@
 
         <Button
             android:id="@+id/btnForgot"
+            style="@style/Widget.App.Button.Primary"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="@dimen/button_height"
             android:layout_weight="1"
+            android:background="@drawable/bg_button_forgot"
             android:text="不认识" />
 
         <Button
             android:id="@+id/btnVague"
+            style="@style/Widget.App.Button.Primary"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="@dimen/button_height"
             android:layout_weight="1"
+            android:background="@drawable/bg_button_vague"
             android:text="模糊" />
 
         <Button
             android:id="@+id/btnRecalled"
+            style="@style/Widget.App.Button.Primary"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="@dimen/button_height"
             android:layout_weight="1"
+            android:background="@drawable/bg_button_recalled"
             android:text="认识" />
     </LinearLayout>
 
     <Button
         android:id="@+id/skipButton"
+        style="@style/Widget.App.Button.Secondary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="跳过" />

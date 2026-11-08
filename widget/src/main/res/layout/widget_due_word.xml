@@ -55,4 +55,16 @@
         android:textColor="#FF9CA3AF"
         android:textSize="10sp" />
 
+    <!-- 快捷标记：只有「有待复习词」时才显示（provider 里按状态 setViewVisibility） -->
+    <TextView
+        android:id="@+id/widgetAction"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/widget_button_bg"
+        android:gravity="center"
+        android:text="@string/widget_mark_reviewed"
+        android:textColor="#FFFFFFFF"
+        android:textSize="11sp" />
+
 </LinearLayout>

@@ -21,6 +21,14 @@
                 android:resource="@xml/due_word_widget_info" />
         </receiver>
 
+        <receiver
+            android:name=".WidgetActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.dancijiyi.widget.action.MARK_REVIEWED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

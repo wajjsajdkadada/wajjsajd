@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 全局配色：主色用青绿（与"记忆/学习"气质匹配），功能性颜色固定四档 -->
+<resources>
+    <color name="brand_primary">#FF2E7D6E</color>
+    <color name="brand_primary_dark">#FF1F5F54</color>
+    <color name="accent_blue">#FF3B82F6</color>
+
+    <!-- 复习四档语义色（按钮、徽章、分布条共用） -->
+    <color name="quality_forgot">#FFD9534F</color>
+    <color name="quality_vague">#FFE8A33D</color>
+    <color name="quality_recalled">#FF2E9E5B</color>
+    <color name="quality_fluent">#FF1F8A70</color>
+
+    <color name="surface">#FFFFFFFF</color>
+    <color name="surface_alt">#FFF7F9F9</color>
+
+    <color name="text_primary">#FF1F2937</color>
+    <color name="text_secondary">#FF6B7280</color>
+    <color name="text_tertiary">#FF9CA3AF</color>
+
+    <color name="divider">#FFE5E7EB</color>
+    <color name="ripple_light">#33000000</color>
+</resources>

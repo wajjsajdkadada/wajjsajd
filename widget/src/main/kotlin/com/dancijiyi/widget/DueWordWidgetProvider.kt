@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.view.View
 import android.widget.RemoteViews
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -100,21 +101,51 @@ class DueWordWidgetProvider : AppWidgetProvider() {
                     setTextViewText(R.id.widgetHint, snapshot.errorMessage?.take(24).orEmpty())
                 }
             }
-            setOnClickPendingIntent(R.id.widgetRoot, openAppIntent(context))
+
+            // 整卡点击：有任务 → 复习页；没词库 → 导入页；异常 → 主页
+            setOnClickPendingIntent(
+                R.id.widgetRoot,
+                when (snapshot.state) {
+                    WidgetState.NORMAL, WidgetState.ALL_DONE -> openActivity(context, REVIEW_ACTIVITY)
+                    WidgetState.NO_WORDBOOK -> openActivity(context, IMPORT_ACTIVITY)
+                    WidgetState.ERROR -> openActivity(context, MAIN_ACTIVITY)
+                },
+            )
+
+            // 「已复习」快捷按钮：只在有待复习词时出现并可用
+            if (snapshot.state == WidgetState.NORMAL) {
+                setViewVisibility(R.id.widgetAction, View.VISIBLE)
+                setOnClickPendingIntent(R.id.widgetAction, markReviewed(context))
+            } else {
+                setViewVisibility(R.id.widgetAction, View.GONE)
+            }
         }
 
     /**
-     * 点击跳转：显式类名，不依赖 intent-filter。
-     * 组件模块不依赖 app，所以这里是字符串常量（改名时编译器不会提醒，靠 docs/07 §1 的契约约束）。
+     * 跳转主 App 某个 Activity：显式类名，不依赖 intent-filter。
+     * 组件模块不依赖 app，所以类名是字符串常量（改名时编译器不会提醒，靠 docs/07 §1 的契约约束）。
      */
-    private fun openAppIntent(context: Context): PendingIntent {
+    private fun openActivity(context: Context, activityClass: String): PendingIntent {
         val intent = Intent().apply {
-            setClassName(context.packageName, MAIN_ACTIVITY)
+            setClassName(context.packageName, activityClass)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         return PendingIntent.getActivity(
             context,
-            0,
+            activityClass.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    /** 「已复习」按钮：发广播给 [WidgetActionReceiver]，由它复用队列引擎写库 */
+    private fun markReviewed(context: Context): PendingIntent {
+        val intent = Intent(context, WidgetActionReceiver::class.java).apply {
+            action = WidgetActionReceiver.ACTION_MARK_REVIEWED
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            REQUEST_MARK_REVIEWED,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -122,7 +153,11 @@ class DueWordWidgetProvider : AppWidgetProvider() {
 
     companion object {
         private const val TAG = "DueWordWidget"
+
         private const val MAIN_ACTIVITY = "com.dancijiyi.app.MainActivity"
+        private const val REVIEW_ACTIVITY = "com.dancijiyi.app.ui.review.ReviewActivity"
+        private const val IMPORT_ACTIVITY = "com.dancijiyi.app.ui.imports.ImportActivity"
+        private const val REQUEST_MARK_REVIEWED = 1001
 
         /** 供主 App / 定时任务主动刷新：向所有实例发一次 APPWIDGET_UPDATE */
         fun requestUpdate(context: Context) {
