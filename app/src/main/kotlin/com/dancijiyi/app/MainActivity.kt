@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private lateinit var bookInput: EditText
+    private lateinit var reminderButton: Button
     private lateinit var wordInput: EditText
     private lateinit var meaningInput: EditText
     private lateinit var statusView: TextView
@@ -172,10 +173,19 @@ class MainActivity : ComponentActivity() {
             }
         })
 
-        root.addView(Button(this).apply {
-            text = "开启每日提醒（21:00）"
-            setOnClickListener { onEnableReminderClick() }
-        })
+        reminderButton = Button(this).apply {
+            setOnClickListener {
+                if (ReminderScheduler.isEnabled(this@MainActivity)) {
+                    ReminderScheduler.cancel(this@MainActivity)
+                    Toast.makeText(this@MainActivity, "已关闭每日提醒", Toast.LENGTH_SHORT).show()
+                    refreshReminderButton()
+                } else {
+                    onEnableReminderClick()
+                }
+            }
+        }
+        refreshReminderButton()
+        root.addView(reminderButton)
 
         root.addView(Button(this).apply {
             text = "小组件数据自检"
@@ -259,11 +269,21 @@ class MainActivity : ComponentActivity() {
 
     // ---------------- 每日提醒（通知权限流程 + 降级） ----------------
 
+    /** 按钮文案随开关状态变化（状态存在 SharedPreferences，重启也保留） */
+    private fun refreshReminderButton() {
+        reminderButton.text = if (ReminderScheduler.isEnabled(this)) {
+            "关闭每日提醒（已开启 21:00）"
+        } else {
+            "开启每日提醒（21:00）"
+        }
+    }
+
     private val requestNotification =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
                 ReminderScheduler.schedule(this)
                 Toast.makeText(this, "已开启每日 21:00 提醒", Toast.LENGTH_SHORT).show()
+                refreshReminderButton()
             } else {
                 showReminderDeniedDialog()
             }

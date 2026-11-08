@@ -64,7 +64,20 @@ object ReminderScheduler {
     /** 默认提醒时间：21:00（写死常量，后续可挪到设置页） */
     val DEFAULT_TIME: LocalTime = LocalTime.of(21, 0)
 
+    private const val PREFS = "reminder_prefs"
     const val PREF_ENABLED = "reminder.enabled"
+
+    /** 提醒开关是否已开启（用于界面回显——之前只登记任务不存状态，重启后无从判断） */
+    fun isEnabled(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(PREF_ENABLED, false)
+
+    private fun setEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(PREF_ENABLED, enabled)
+            .apply()
+    }
 
     fun schedule(context: Context, time: LocalTime = DEFAULT_TIME) {
         ReminderNotifier.ensureChannel(context)
@@ -79,10 +92,12 @@ object ReminderScheduler {
             ExistingPeriodicWorkPolicy.KEEP,
             request,
         )
+        setEnabled(context, true)
     }
 
     fun cancel(context: Context) {
         WorkManager.getInstance(context).cancelUniqueWork(ReminderWorker.WORK_NAME)
+        setEnabled(context, false)
     }
 
     internal fun millisUntilNext(
