@@ -10,6 +10,7 @@ import com.dancijiyi.domain.model.Quality
 import com.dancijiyi.domain.model.ReviewQueue
 import com.dancijiyi.domain.repository.ReviewQueueRepository
 import com.dancijiyi.domain.repository.SessionStats
+import com.dancijiyi.widget.WidgetSync
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -134,6 +135,8 @@ class ReviewViewModel(
         viewModelScope.launch {
             try {
                 repository.answer(sessionId, wordId, quality, duration, Instant.now(clock))
+                // 写库成功 → 立刻刷新桌面小组件（实时同步，链路③）
+                WidgetSync.notifyDataChanged()
             } catch (e: Exception) {
                 _uiState.value = ReviewUiState.Error(e.message ?: "作答失败")
             }

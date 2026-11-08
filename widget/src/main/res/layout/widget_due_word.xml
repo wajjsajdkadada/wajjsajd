@@ -43,4 +43,16 @@
         android:textColor="#FF6B7280"
         android:textSize="12sp" />
 
+    <TextView
+        android:id="@+id/widgetHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text=""
+        android:textColor="#FF9CA3AF"
+        android:textSize="10sp" />
+
 </LinearLayout>

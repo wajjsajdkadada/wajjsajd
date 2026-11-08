@@ -21,4 +21,6 @@ dependencies {
     implementation(project(":core-data"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    // 跨天归零：每日 00:05 定时刷新
+    implementation(libs.androidx.work.runtime.ktx)
 }

@@ -21,6 +21,7 @@ import com.dancijiyi.app.ui.wordlist.WordListActivity
 import com.dancijiyi.app.ui.imports.ImportActivity
 import com.dancijiyi.app.ui.demo.DemoUiState
 import com.dancijiyi.app.ui.demo.DemoViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -168,6 +169,11 @@ class MainActivity : ComponentActivity() {
         })
 
         root.addView(Button(this).apply {
+            text = "小组件数据自检"
+            setOnClickListener { runWidgetConsistencyCheck() }
+        })
+
+        root.addView(Button(this).apply {
             text = "算法参数"
             setOnClickListener {
                 startActivity(Intent(this@MainActivity, AlgorithmSettingsActivity::class.java))
@@ -238,6 +244,40 @@ class MainActivity : ComponentActivity() {
                         "${item.word.spelling}   ${item.state.stage} 阶   ${item.word.meaning}"
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * 小组件数据一致性自检。
+     *
+     * 组件侧走 `observeDueCount`（全库到期数），列表页走「各词库 dueCount 求和」。
+     * 两条查询路径不同、但读的是同一个 Room 实例与同一份 db，结果必须完全相等——
+     * 这是验证「组件与主 App 数据一致」最直接的办法。
+     */
+    private fun runWidgetConsistencyCheck() {
+        val container = (application as DanCiJiYiApp).container
+        lifecycleScope.launch {
+            try {
+                val now = java.time.Instant.now(container.clock)
+                val widgetCount = container.repository.observeDueCount(now).first()
+                val listSum = container.repository.observeWordbooks(now).first().sumOf { it.dueCount }
+                val same = widgetCount == listSum
+                android.app.AlertDialog.Builder(this@MainActivity)
+                    .setTitle(if (same) "数据一致 ✓" else "数据不一致 ✗")
+                    .setMessage(
+                        "小组件读取（observeDueCount）：$widgetCount 词\n" +
+                            "列表页合计（各词库 dueCount 求和）：$listSum 词\n\n" +
+                            "两者走同一 Room 实例与同一份 db 文件，理论上必然相等。",
+                    )
+                    .setPositiveButton("知道了", null)
+                    .show()
+            } catch (e: Exception) {
+                android.app.AlertDialog.Builder(this@MainActivity)
+                    .setTitle("自检失败")
+                    .setMessage(e.message ?: e::class.java.simpleName)
+                    .setPositiveButton("知道了", null)
+                    .show()
             }
         }
     }

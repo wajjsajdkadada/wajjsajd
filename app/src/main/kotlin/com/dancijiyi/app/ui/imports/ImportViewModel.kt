@@ -12,6 +12,7 @@ import com.dancijiyi.domain.model.ImportReport
 import com.dancijiyi.domain.model.WordDraft
 import com.dancijiyi.domain.model.WordbookWithStats
 import com.dancijiyi.domain.repository.WordRepository
+import com.dancijiyi.widget.WidgetSync
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -148,6 +149,8 @@ class ImportViewModel(
                     _state.update { it.copy(progress = progress) }
                 }
                 _state.update { it.copy(phase = ImportUiState.Phase.DONE, report = report) }
+                // 导入写库完成 → 立刻刷新桌面小组件
+                WidgetSync.notifyDataChanged()
             } catch (e: CancellationException) {
                 _state.update {
                     it.copy(
@@ -174,6 +177,7 @@ class ImportViewModel(
         viewModelScope.launch {
             runCatching { repository.addWord(bookId, draft, Instant.now(clock)) }
                 .onSuccess {
+                    WidgetSync.notifyDataChanged()
                     _state.update { s ->
                         s.copy(hint = "已手动添加：${draft.spelling}（可继续添加）", phase = ImportUiState.Phase.IDLE)
                     }

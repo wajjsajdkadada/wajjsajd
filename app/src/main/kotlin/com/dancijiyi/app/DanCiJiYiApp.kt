@@ -3,6 +3,8 @@ package com.dancijiyi.app
 import android.app.Application
 import android.util.Log
 import com.dancijiyi.app.di.AppContainer
+import com.dancijiyi.widget.WidgetRefreshScheduler
+import com.dancijiyi.widget.WidgetSync
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.launch
 import java.io.File
@@ -30,6 +32,10 @@ class DanCiJiYiApp : Application() {
         super.onCreate()
         container = AppContainer(this)
         installUncaughtExceptionHandler()
+
+        // 小组件数据同步：安装刷新桥 + 登记每日 00:05 的跨天刷新任务
+        WidgetSync.install(this)
+        WidgetRefreshScheduler.scheduleDaily(this)
 
         val safeScope = container.applicationScope
         safeScope.launch {
