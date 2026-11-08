@@ -52,4 +52,10 @@ data class SessionStats(
     val deferredCount: Int,
     val correctCount: Int,
     val averageDurationMs: Long,
-)
+    /** 各反馈档位的作答次数，用于结算页分布条 */
+    val qualityCounts: Map<Quality, Int> = emptyMap(),
+) {
+    /** 答对率（认识 + 熟练 占比） */
+    val correctRate: Int
+        get() = if (answeredCount == 0) 0 else correctCount * 100 / answeredCount
+}

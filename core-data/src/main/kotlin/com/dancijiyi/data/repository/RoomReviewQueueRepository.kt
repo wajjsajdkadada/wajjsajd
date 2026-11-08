@@ -196,6 +196,8 @@ class RoomReviewQueueRepository(
             deferredCount = session?.deferredCount ?: 0,
             correctCount = queueDao.countCorrectInSession(sessionKey),
             averageDurationMs = queueDao.averageDurationInSession(sessionKey).toLong(),
+            qualityCounts = queueDao.qualityDistribution(sessionKey)
+                .associate { row -> Quality.of(row.quality) to row.count },
         )
     }
 

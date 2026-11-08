@@ -108,12 +108,21 @@ class ReviewViewModel(
         }
     }
 
-    /** 翻牌：揭示释义（未揭示时四档按钮禁用） */
+    /** 翻牌：揭示释义（未揭示时反馈按钮禁用） */
     fun reveal() {
         revealed = true
         val current = _uiState.value
         if (current is ReviewUiState.Answering) {
             _uiState.value = current.copy(revealed = true)
+        }
+    }
+
+    /** 点击/滑动切换正反面 */
+    fun toggleReveal() {
+        revealed = !revealed
+        val current = _uiState.value
+        if (current is ReviewUiState.Answering) {
+            _uiState.value = current.copy(revealed = revealed)
         }
     }
 

@@ -6,6 +6,7 @@ import androidx.room.Query
 import com.dancijiyi.data.local.entity.QueueItemEntity
 import com.dancijiyi.data.local.entity.ReviewSessionEntity
 import com.dancijiyi.data.local.projection.DueCandidateRow
+import com.dancijiyi.data.local.projection.QualityCountRow
 import com.dancijiyi.data.local.projection.QueueItemRow
 import kotlinx.coroutines.flow.Flow
 
@@ -42,6 +43,17 @@ interface QueueDao {
     /** 会话内平均作答耗时（毫秒） */
     @Query("SELECT COALESCE(AVG(duration_ms), 0) FROM review_log WHERE session_id = :sessionKey")
     suspend fun averageDurationInSession(sessionKey: String): Double
+
+    /** 会话内各档反馈的作答次数（结算页分布条） */
+    @Query(
+        """
+        SELECT quality AS quality, COUNT(*) AS count
+          FROM review_log
+         WHERE session_id = :sessionKey
+         GROUP BY quality
+        """,
+    )
+    suspend fun qualityDistribution(sessionKey: String): List<QualityCountRow>
 
     @Query("UPDATE review_session SET answered_count = answered_count + 1 WHERE id = :id")
     suspend fun incrementAnswered(id: Long)
