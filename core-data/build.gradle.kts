@@ -31,4 +31,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    // 解析器是纯 Kotlin，可在本地 JVM 单测（无需模拟器）
+    testImplementation(libs.junit)
 }

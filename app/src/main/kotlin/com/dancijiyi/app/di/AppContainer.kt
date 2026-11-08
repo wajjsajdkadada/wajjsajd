@@ -1,6 +1,7 @@
 package com.dancijiyi.app.di
 
 import android.content.Context
+import com.dancijiyi.data.importer.WordImportRunner
 import com.dancijiyi.data.local.DancijiyiDatabase
 import com.dancijiyi.data.repository.RoomWordRepository
 import com.dancijiyi.domain.repository.WordRepository
@@ -26,4 +27,7 @@ class AppContainer(context: Context) {
     private val database: DancijiyiDatabase by lazy { DancijiyiDatabase.get(context) }
 
     val repository: WordRepository by lazy { RoomWordRepository(database, clock) }
+
+    /** 词库导入执行器：流式解析 + 分批入库 + 进度回调 */
+    val importRunner: WordImportRunner by lazy { WordImportRunner(repository, clock) }
 }

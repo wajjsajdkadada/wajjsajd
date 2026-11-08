@@ -2,11 +2,13 @@ package com.dancijiyi.data.repository
 
 import androidx.room.withTransaction
 import com.dancijiyi.data.local.DancijiyiDatabase
+import com.dancijiyi.data.local.entity.ImportRecordEntity
 import com.dancijiyi.data.local.entity.ReviewStateEntity
 import com.dancijiyi.data.local.entity.WordbookEntity
 import com.dancijiyi.data.mapper.toDomain
 import com.dancijiyi.data.mapper.toEntity
 import com.dancijiyi.data.seed.SeedData
+import com.dancijiyi.domain.model.ImportReport
 import com.dancijiyi.domain.model.ImportSummary
 import com.dancijiyi.domain.model.ReviewLogDraft
 import com.dancijiyi.domain.model.ReviewState
@@ -40,6 +42,7 @@ class RoomWordRepository(
     private val wordbookDao = db.wordbookDao()
     private val wordDao = db.wordDao()
     private val reviewDao = db.reviewDao()
+    private val metaDao = db.metaDao()
 
     // ---------------- 词库 ----------------
 
@@ -223,6 +226,42 @@ class RoomWordRepository(
         reviewDao.clearLogs()
     }
 
+    override suspend fun saveImportRecord(report: ImportReport) {
+        metaDao.insertImportRecord(
+            ImportRecordEntity(
+                bookId = report.bookId,
+                fileName = report.fileName,
+                format = report.format,
+                total = report.total,
+                inserted = report.inserted,
+                updated = report.updated,
+                skipped = report.skipped,
+                failed = report.failed,
+                failedDetailJson = report.failedRows
+                    .take(MAX_FAILURE_DETAIL)
+                    .joinToString(separator = ",", prefix = "[", postfix = "]") { row ->
+                        """{"line":${row.line},"reason":"${escapeJson(row.reason)}"}"""
+                    },
+                status = report.status.name,
+                createdAt = Instant.now(clock).toEpochMilli(),
+            ),
+        )
+    }
+
+    /** 最小 JSON 转义：失败原因里可能含引号/反斜杠/换行 */
+    private fun escapeJson(raw: String): String = buildString(raw.length + 8) {
+        raw.forEach { c ->
+            when (c) {
+                '"' -> append("\\\"")
+                '\\' -> append("\\\\")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else -> if (c < ' ') append(' ') else append(c)
+            }
+        }
+    }
+
     // ---------------- 初始化 ----------------
 
     override suspend fun ensureSeedData(now: Instant) {
@@ -248,5 +287,6 @@ class RoomWordRepository(
         const val MAX_SPELLING_LEN = 64
         const val MAX_MEANING_LEN = 512
         const val IMPORT_CHUNK = 200
+        const val MAX_FAILURE_DETAIL = 100
     }
 }

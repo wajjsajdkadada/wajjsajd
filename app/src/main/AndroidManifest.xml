@@ -18,6 +18,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.imports.ImportActivity"
+            android:exported="false"
+            android:label="导入词库" />
+
     </application>
 
 </manifest>

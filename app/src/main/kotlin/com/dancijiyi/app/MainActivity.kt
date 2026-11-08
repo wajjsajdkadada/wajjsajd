@@ -1,5 +1,6 @@
 package com.dancijiyi.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
@@ -14,6 +15,7 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.dancijiyi.app.ui.imports.ImportActivity
 import com.dancijiyi.app.ui.demo.DemoUiState
 import com.dancijiyi.app.ui.demo.DemoViewModel
 import kotlinx.coroutines.launch
@@ -135,6 +137,13 @@ class MainActivity : ComponentActivity() {
             addView(listView)
         }
         root.addView(scroll)
+
+        root.addView(Button(this).apply {
+            text = "导入词库（CSV）"
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, ImportActivity::class.java))
+            }
+        })
 
         val actionRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL

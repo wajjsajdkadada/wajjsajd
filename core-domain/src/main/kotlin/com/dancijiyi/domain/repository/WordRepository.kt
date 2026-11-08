@@ -1,5 +1,6 @@
 package com.dancijiyi.domain.repository
 
+import com.dancijiyi.domain.model.ImportReport
 import com.dancijiyi.domain.model.ImportSummary
 import com.dancijiyi.domain.model.ReviewLogDraft
 import com.dancijiyi.domain.model.ReviewState
@@ -79,6 +80,9 @@ interface WordRepository {
     suspend fun statistics(since: Instant): Statistics
 
     suspend fun clearReviewHistory()
+
+    /** 保存一条导入记录（成功/取消/失败都记，供结果页回看与「上次导入」提示） */
+    suspend fun saveImportRecord(report: ImportReport)
 
     // ---------------- 初始化 ----------------
 
