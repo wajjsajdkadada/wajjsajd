@@ -71,7 +71,7 @@ class ReviewViewModel(
         viewModelScope.launch {
             _uiState.value = ReviewUiState.Loading
             try {
-                val result = repository.openQueue(Instant.now(clock), dailyLimit)
+                val result = repository.openQueue(Instant.now(clock))
                 sessionId = result.sessionId
                 deferredCount = result.deferredCount
 

@@ -15,9 +15,10 @@ import com.dancijiyi.domain.model.QueueOpenResult
 import com.dancijiyi.domain.model.ReviewLogDraft
 import com.dancijiyi.domain.model.ReviewQueue
 import com.dancijiyi.domain.model.ReviewQueueItem
+import com.dancijiyi.domain.repository.AlgorithmConfigRepository
 import com.dancijiyi.domain.repository.ReviewQueueRepository
 import com.dancijiyi.domain.repository.SessionStats
-import com.dancijiyi.domain.scheduler.StageScheduler
+import com.dancijiyi.domain.scheduler.EbbinghausScheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.Clock
@@ -35,15 +36,19 @@ import java.time.LocalDate
  */
 class RoomReviewQueueRepository(
     private val db: DancijiyiDatabase,
+    private val configRepository: AlgorithmConfigRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
+    private val scheduler: EbbinghausScheduler = EbbinghausScheduler(),
 ) : ReviewQueueRepository {
 
     private val queueDao = db.queueDao()
     private val wordDao = db.wordDao()
     private val reviewDao = db.reviewDao()
 
-    override suspend fun openQueue(now: Instant, dailyLimit: Int): QueueOpenResult {
+    override suspend fun openQueue(now: Instant): QueueOpenResult {
         val dateKey = LocalDate.now(clock).toString()
+        // 每日上限从算法参数读取（设置页可改，默认 50）
+        val dailyLimit = configRepository.loadConfig().dailyReviewLimit
 
         // 1) 当天已有进行中的会话 → 恢复（重启不丢队列的关键）
         queueDao.findActiveSession(dateKey)?.let { session ->
@@ -132,7 +137,18 @@ class RoomReviewQueueRepository(
     ): AnswerOutcome {
         val row = wordDao.findWithState(wordId) ?: error("单词不存在：$wordId")
         val current = row.toDomain(now).state
-        val (nextState, settlement) = StageScheduler.settle(current, quality, now)
+        // 用当前参数结算（设置页改完立即生效，无需重启）
+        val config = configRepository.loadConfig()
+        val settlement = scheduler.settle(current, quality, now, config)
+        val nextState = current.copy(
+            stage = settlement.nextStage,
+            easeFactor = settlement.nextEase,
+            lapseCount = if (quality == Quality.FORGOT) current.lapseCount + 1 else current.lapseCount,
+            reviewCount = current.reviewCount + 1,
+            lastReviewedAt = now,
+            nextDueAt = settlement.nextDueAt,
+            isMastered = settlement.isMastered,
+        )
 
         var remaining = 0
         var finished = false

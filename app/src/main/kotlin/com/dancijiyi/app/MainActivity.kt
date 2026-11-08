@@ -15,6 +15,7 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.dancijiyi.app.ui.settings.AlgorithmSettingsActivity
 import com.dancijiyi.app.ui.review.ReviewActivity
 import com.dancijiyi.app.ui.wordlist.WordListActivity
 import com.dancijiyi.app.ui.imports.ImportActivity
@@ -151,6 +152,13 @@ class MainActivity : ComponentActivity() {
             text = "单词列表（RecyclerView）"
             setOnClickListener {
                 startActivity(Intent(this@MainActivity, WordListActivity::class.java))
+            }
+        })
+
+        root.addView(Button(this).apply {
+            text = "算法参数"
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, AlgorithmSettingsActivity::class.java))
             }
         })
 

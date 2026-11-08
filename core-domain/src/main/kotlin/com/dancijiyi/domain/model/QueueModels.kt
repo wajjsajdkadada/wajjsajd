@@ -71,6 +71,10 @@ data class Settlement(
     val intervalMs: Long,
     val nextDueAt: Instant,
     val isMastered: Boolean,
+    /** 结算前的难度系数 */
+    val prevEase: Double = 2.50,
+    /** 结算后的难度系数 */
+    val nextEase: Double = 2.50,
 )
 
 /** 作答后的结果 */

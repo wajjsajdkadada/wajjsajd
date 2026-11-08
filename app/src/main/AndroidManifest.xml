@@ -39,6 +39,11 @@
             android:exported="false"
             android:label="今日复习" />
 
+        <activity
+            android:name=".ui.settings.AlgorithmSettingsActivity"
+            android:exported="false"
+            android:label="算法参数" />
+
     </application>
 
 </manifest>
