@@ -59,12 +59,42 @@ interface WordDao {
           LEFT JOIN review_state rs ON rs.word_id = w.id
          WHERE w.book_id = :bookId
            AND (:keyword = '' OR w.spelling_lower LIKE :keyword || '%')
+           AND (
+                :filter = 'ALL'
+                OR (:filter = 'DUE_TODAY' AND rs.next_due_at <= :now AND rs.is_mastered = 0)
+                OR (:filter = 'NEW'       AND rs.review_count = 0)
+                OR (:filter = 'MASTERED'  AND rs.is_mastered = 1)
+           )
          ORDER BY CASE WHEN :sort = 'DUE' THEN rs.next_due_at ELSE NULL END ASC,
                   CASE WHEN :sort = 'AZ'  THEN w.spelling_lower ELSE NULL END ASC,
                   CASE WHEN :sort = 'NEW' THEN w.created_at ELSE NULL END DESC
         """,
     )
-    fun observeWithState(bookId: Long, keyword: String, sort: String): Flow<List<WordStateRow>>
+    fun observeWithState(
+        bookId: Long,
+        keyword: String,
+        sort: String,
+        filter: String,
+        now: Long,
+    ): Flow<List<WordStateRow>>
+
+    /** 详情页主数据：单条词的「词 + 状态」 */
+    @Query(
+        """
+        SELECT w.*,
+               rs.stage             AS stage,
+               rs.ease_factor       AS easeFactor,
+               rs.lapse_count       AS lapseCount,
+               rs.review_count      AS reviewCount,
+               rs.last_reviewed_at  AS lastReviewedAt,
+               rs.next_due_at       AS nextDueAt,
+               rs.is_mastered       AS isMastered
+          FROM word w
+          LEFT JOIN review_state rs ON rs.word_id = w.id
+         WHERE w.id = :wordId
+        """,
+    )
+    fun observeWithStateById(wordId: Long): Flow<WordStateRow?>
 
     @Query(
         """

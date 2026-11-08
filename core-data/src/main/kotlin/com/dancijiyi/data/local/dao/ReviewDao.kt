@@ -18,6 +18,10 @@ interface ReviewDao {
     @Insert
     suspend fun insertLog(log: ReviewLogEntity): Long
 
+    /** 详情页复习历史时间线（倒序） */
+    @Query("SELECT * FROM review_log WHERE word_id = :wordId ORDER BY reviewed_at DESC LIMIT :limit")
+    fun observeHistory(wordId: Long, limit: Int): Flow<List<ReviewLogEntity>>
+
     /**
      * 今日到期队列（未掌握、未归档词库）。
      * 走 `idx_review_state_next_due_at` 索引，`LIMIT` 由每日上限控制。

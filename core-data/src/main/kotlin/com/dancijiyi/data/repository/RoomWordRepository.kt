@@ -14,6 +14,8 @@ import com.dancijiyi.domain.model.ReviewLogDraft
 import com.dancijiyi.domain.model.ReviewState
 import com.dancijiyi.domain.model.Statistics
 import com.dancijiyi.domain.model.WordDraft
+import com.dancijiyi.domain.model.ReviewRecord
+import com.dancijiyi.domain.model.WordFilter
 import com.dancijiyi.domain.model.WordSort
 import com.dancijiyi.domain.model.WordWithState
 import com.dancijiyi.domain.model.Wordbook
@@ -85,12 +87,28 @@ class RoomWordRepository(
 
     // ---------------- 单词 ----------------
 
-    override fun observeWords(bookId: Long, keyword: String, sort: WordSort): Flow<List<WordWithState>> =
+    override fun observeWords(
+        bookId: Long,
+        keyword: String,
+        sort: WordSort,
+        filter: WordFilter,
+    ): Flow<List<WordWithState>> =
         wordDao.observeWithState(
             bookId = bookId,
             keyword = keyword.trim().lowercase(),
             sort = sort.name,
+            filter = filter.name,
+            now = Instant.now(clock).toEpochMilli(),
         ).map { rows -> rows.map { it.toDomain(Instant.now(clock)) } }
+
+    override fun observeWordbook(id: Long): Flow<Wordbook?> =
+        wordbookDao.observeById(id).map { it?.toDomain() }
+
+    override fun observeWord(wordId: Long): Flow<WordWithState?> =
+        wordDao.observeWithStateById(wordId).map { it?.toDomain(Instant.now(clock)) }
+
+    override fun observeHistory(wordId: Long, limit: Int): Flow<List<ReviewRecord>> =
+        reviewDao.observeHistory(wordId, limit).map { logs -> logs.map { it.toDomain() } }
 
     override suspend fun getWord(wordId: Long): WordWithState? =
         wordDao.findWithState(wordId)?.toDomain(Instant.now(clock))

@@ -7,6 +7,7 @@ import com.dancijiyi.data.local.entity.WordbookEntity
 import com.dancijiyi.data.local.projection.WordStateRow
 import com.dancijiyi.data.local.projection.WordbookStatsRow
 import com.dancijiyi.domain.model.ReviewLogDraft
+import com.dancijiyi.domain.model.ReviewRecord
 import com.dancijiyi.domain.model.ReviewState
 import com.dancijiyi.domain.model.Word
 import com.dancijiyi.domain.model.WordDraft
@@ -93,6 +94,19 @@ fun ReviewLogDraft.toEntity(): ReviewLogEntity = ReviewLogEntity(
  * 但 LEFT JOIN 仍可能因为历史数据返回 null，这里给出安全兜底：
  * 视为「新词、立即到期」，而不是抛异常让列表崩掉。
  */
+fun ReviewLogEntity.toDomain(): ReviewRecord = ReviewRecord(
+    id = id,
+    wordId = wordId,
+    quality = quality,
+    prevStage = prevStage,
+    nextStage = nextStage,
+    prevEase = prevEase,
+    nextEase = nextEase,
+    intervalMs = intervalMs,
+    durationMs = durationMs,
+    reviewedAt = reviewedAt.toInstant(),
+)
+
 fun WordStateRow.toDomain(fallbackNow: Instant): WordWithState {
     val word = word.toDomain()
     val due = nextDueAt

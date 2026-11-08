@@ -6,6 +6,8 @@ import com.dancijiyi.domain.model.ReviewLogDraft
 import com.dancijiyi.domain.model.ReviewState
 import com.dancijiyi.domain.model.Statistics
 import com.dancijiyi.domain.model.WordDraft
+import com.dancijiyi.domain.model.ReviewRecord
+import com.dancijiyi.domain.model.WordFilter
 import com.dancijiyi.domain.model.WordSort
 import com.dancijiyi.domain.model.WordWithState
 import com.dancijiyi.domain.model.Wordbook
@@ -49,7 +51,17 @@ interface WordRepository {
         bookId: Long,
         keyword: String = "",
         sort: WordSort = WordSort.DUE,
+        filter: WordFilter = WordFilter.ALL,
     ): Flow<List<WordWithState>>
+
+    /** 观察单个词库（用于详情页/列表页标题） */
+    fun observeWordbook(id: Long): Flow<Wordbook?>
+
+    /** 观察单个词（详情页主数据；词被删除时发射 null） */
+    fun observeWord(wordId: Long): Flow<WordWithState?>
+
+    /** 观察某词的复习历史（时间线，倒序） */
+    fun observeHistory(wordId: Long, limit: Int = 20): Flow<List<ReviewRecord>>
 
     suspend fun getWord(wordId: Long): WordWithState?
 

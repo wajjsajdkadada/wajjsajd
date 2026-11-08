@@ -16,6 +16,9 @@ interface WordbookDao {
     @Query("SELECT * FROM wordbook WHERE id = :id")
     suspend fun findById(id: Long): WordbookEntity?
 
+    @Query("SELECT * FROM wordbook WHERE id = :id")
+    fun observeById(id: Long): Flow<WordbookEntity?>
+
     @Query("SELECT COUNT(*) FROM wordbook WHERE archived_at IS NULL")
     suspend fun countActive(): Int
 

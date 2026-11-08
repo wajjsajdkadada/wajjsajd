@@ -23,6 +23,17 @@
             android:exported="false"
             android:label="导入词库" />
 
+        <activity
+            android:name=".ui.wordlist.WordListActivity"
+            android:exported="false"
+            android:label="单词列表" />
+
+        <activity
+            android:name=".ui.detail.WordDetailActivity"
+            android:exported="false"
+            android:label="单词详情"
+            android:parentActivityName=".ui.wordlist.WordListActivity" />
+
     </application>
 
 </manifest>
