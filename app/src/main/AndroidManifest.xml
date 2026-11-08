@@ -10,6 +10,9 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
+    <!-- 每日复习提醒（Android 13+ 需要运行时授予；拒绝后降级为「仅桌面小组件提醒」） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".DanCiJiYiApp"
         android:allowBackup="true"

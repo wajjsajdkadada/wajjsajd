@@ -10,6 +10,10 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import com.dancijiyi.app.notify.ReminderNotifier
+import com.dancijiyi.app.notify.ReminderScheduler
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
@@ -169,6 +173,11 @@ class MainActivity : ComponentActivity() {
         })
 
         root.addView(Button(this).apply {
+            text = "开启每日提醒（21:00）"
+            setOnClickListener { onEnableReminderClick() }
+        })
+
+        root.addView(Button(this).apply {
             text = "小组件数据自检"
             setOnClickListener { runWidgetConsistencyCheck() }
         })
@@ -246,6 +255,60 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    // ---------------- 每日提醒（通知权限流程 + 降级） ----------------
+
+    private val requestNotification =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                ReminderScheduler.schedule(this)
+                Toast.makeText(this, "已开启每日 21:00 提醒", Toast.LENGTH_SHORT).show()
+            } else {
+                showReminderDeniedDialog()
+            }
+        }
+
+    private fun onEnableReminderClick() {
+        if (ReminderNotifier.hasPermission(this)) {
+            ReminderScheduler.schedule(this)
+            Toast.makeText(this, "已开启每日 21:00 提醒", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("需要通知权限")
+                .setMessage(
+                    "用途：每天 21:00 提醒你还有多少单词要复习。\n\n" +
+                        "不给这个权限也能用——桌面小组件会一直显示今日待复习数量，" +
+                        "任务照常会自动排好。",
+                )
+                .setPositiveButton("去授权") { _, _ ->
+                    requestNotification.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+                .setNegativeButton("暂不开启", null)
+                .show()
+        } else {
+            requestNotification.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun showReminderDeniedDialog() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("提醒未开启")
+            .setMessage(
+                "没有通知权限，每日提醒不会弹出。\n\n" +
+                    "降级方案：把「今日待复习」小组件放到桌面，效果一样——" +
+                    "随时能看到还剩多少词，点一下就能开始复习。",
+            )
+            .setPositiveButton("知道了", null)
+            .setNegativeButton("去系统设置") { _, _ ->
+                startActivity(
+                    android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName),
+                )
+            }
+            .show()
     }
 
     /**

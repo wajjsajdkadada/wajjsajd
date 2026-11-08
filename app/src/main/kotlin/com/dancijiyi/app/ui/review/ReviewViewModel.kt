@@ -50,7 +50,6 @@ sealed interface ReviewUiState {
 class ReviewViewModel(
     private val repository: ReviewQueueRepository,
     private val clock: Clock,
-    private val dailyLimit: Int = DEFAULT_DAILY_LIMIT,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ReviewUiState>(ReviewUiState.Loading)
@@ -152,8 +151,6 @@ class ReviewViewModel(
     }
 
     companion object {
-        const val DEFAULT_DAILY_LIMIT = 50
-
         fun factory(container: AppContainer): ViewModelProvider.Factory = viewModelFactory {
             initializer { ReviewViewModel(container.reviewQueueRepository, container.clock) }
         }

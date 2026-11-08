@@ -61,12 +61,56 @@ class RoomReviewQueueRepository(
             )
         }
 
-        // 2) 建新会话：按优先级取前 dailyLimit 个
         val nowMillis = now.toEpochMilli()
         val dueTotal = queueDao.countDue(nowMillis)
+        if (dueTotal == 0) {
+            return QueueOpenResult(
+                sessionId = NO_SESSION,
+                plannedCount = 0,
+                deferredCount = 0,
+                dueTotal = 0,
+                resumed = false,
+            )
+        }
+
         val planned = minOf(dueTotal, dailyLimit)
         val deferred = (dueTotal - planned).coerceAtLeast(0)
 
+        // 2) 当天已完成过一轮，但又有新的到期词（顺延词到点 / 刚导入的新词）：
+        //    不能新建会话（date_key 上有唯一索引会直接冲突），改为**重开原会话并追加队列项**
+        val existing = queueDao.findSessionByDate(dateKey)
+        if (existing != null) {
+            val candidates = queueDao.pickQueueCandidates(nowMillis, planned)
+            var added = 0
+            db.withTransaction {
+                val startPosition = queueDao.maxPosition(existing.id) + 1
+                val rowIds = queueDao.insertItemsIgnoreDuplicates(
+                    candidates.mapIndexed { index, candidate ->
+                        QueueItemEntity(
+                            sessionId = existing.id,
+                            wordId = candidate.wordId,
+                            position = startPosition + index,
+                            status = QueueItemStatus.PENDING.name,
+                        )
+                    },
+                )
+                // -1 表示被唯一索引挡下的重复项（例如之前「跳过」的词）
+                added = rowIds.count { it >= 0 }
+                queueDao.reopenSession(existing.id, added, existing.deferredCount + deferred)
+            }
+            if (added == 0) {
+                return QueueOpenResult(NO_SESSION, 0, deferred, dueTotal, resumed = false)
+            }
+            return QueueOpenResult(
+                sessionId = existing.id,
+                plannedCount = existing.plannedCount + added,
+                deferredCount = existing.deferredCount + deferred,
+                dueTotal = dueTotal,
+                resumed = true,
+            )
+        }
+
+        // 3) 全新会话
         if (planned == 0) {
             return QueueOpenResult(
                 sessionId = NO_SESSION,
