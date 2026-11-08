@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AppWidget 元数据（Android 侧叫 AppWidgetProviderInfo）。
+
+  参数取舍：
+  - minWidth/minHeight 110dp ≈ 2×2 单元格，是「只显示一个数字」最紧凑的尺寸；
+  - targetCellWidth/Height 是 Android 12+ 的精确单元格数（老系统忽略这两个属性）；
+  - updatePeriodMillis 最小只能设 30 分钟（系统硬限制），所以真正的实时刷新
+    靠主 App 写库后主动触发（见 WidgetRefresher），这个周期只是兜底；
+  - resizeMode 允许用户拉伸，布局用中心对齐 + 大字号自适应；
+  - widgetCategory=home_screen 只上桌面，不做锁屏组件。
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/widget_due_word"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:previewLayout="@layout/widget_due_word"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

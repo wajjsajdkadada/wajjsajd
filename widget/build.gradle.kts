@@ -17,6 +17,8 @@ android {
 }
 
 dependencies {
+    // 小组件与主 App 共享同一个数据层（同一 Room 实例、同一库文件）
     implementation(project(":core-data"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.android)
 }

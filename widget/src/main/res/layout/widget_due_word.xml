@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  小组件根布局。
+
+  约束（RemoteViews 的限制）：只能用系统支持的控件与属性，
+  不能用自定义 View、不能有 DataBinding、不能嵌套过深（有 Binder 事务大小上限）。
+  所以这里是最朴素的 LinearLayout + TextView。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/widgetTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="今日待复习"
+        android:textColor="#FF3B82F6"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/widgetCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:includeFontPadding="false"
+        android:text="--"
+        android:textColor="#FF1F2937"
+        android:textSize="34sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/widgetUnit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="个单词"
+        android:textColor="#FF6B7280"
+        android:textSize="12sp" />
+
+</LinearLayout>

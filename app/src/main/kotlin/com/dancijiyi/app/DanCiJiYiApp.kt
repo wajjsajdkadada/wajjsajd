@@ -36,6 +36,8 @@ class DanCiJiYiApp : Application() {
             runCatching {
                 container.repository.ensureSeedData(Instant.now(container.clock))
             }.onFailure { Log.w(TAG, "种子数据写入失败：${it.message}") }
+            // 种子写入后刷新一次桌面小组件（组件与主 App 共享数据层，读到的就是刚写入的词）
+            runCatching { com.dancijiyi.widget.DueWordWidgetProvider.requestUpdate(this@DanCiJiYiApp) }
         }
     }
 

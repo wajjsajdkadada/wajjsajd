@@ -29,6 +29,8 @@ android {
 
 dependencies {
     implementation(project(":core-data"))
+    // 桌面小组件模块：library 的 manifest（receiver 声明）必须被 app 依赖才会合并进 APK
+    implementation(project(":widget"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.recyclerview)

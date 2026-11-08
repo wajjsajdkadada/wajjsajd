@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_label">今日待复习</string>
+    <string name="widget_description">显示今日还有多少单词待复习，点击可直接进入复习页</string>
+    <string name="widget_empty">今日已完成</string>
+</resources>
