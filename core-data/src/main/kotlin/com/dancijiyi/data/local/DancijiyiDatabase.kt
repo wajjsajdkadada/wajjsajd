@@ -5,11 +5,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.dancijiyi.data.local.dao.MetaDao
+import com.dancijiyi.data.local.dao.QueueDao
 import com.dancijiyi.data.local.dao.ReviewDao
 import com.dancijiyi.data.local.dao.WordDao
 import com.dancijiyi.data.local.dao.WordbookDao
 import com.dancijiyi.data.local.entity.ImportRecordEntity
+import com.dancijiyi.data.local.entity.QueueItemEntity
 import com.dancijiyi.data.local.entity.ReviewLogEntity
+import com.dancijiyi.data.local.entity.ReviewSessionEntity
 import com.dancijiyi.data.local.entity.ReviewStateEntity
 import com.dancijiyi.data.local.entity.SettingEntity
 import com.dancijiyi.data.local.entity.WordEntity
@@ -31,8 +34,10 @@ import com.dancijiyi.data.local.entity.WordbookEntity
         ReviewLogEntity::class,
         ImportRecordEntity::class,
         SettingEntity::class,
+        ReviewSessionEntity::class,
+        QueueItemEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class DancijiyiDatabase : RoomDatabase() {
@@ -44,6 +49,8 @@ abstract class DancijiyiDatabase : RoomDatabase() {
     abstract fun reviewDao(): ReviewDao
 
     abstract fun metaDao(): MetaDao
+
+    abstract fun queueDao(): QueueDao
 
     companion object {
         const val DB_NAME = "dancijiyi.db"
@@ -62,6 +69,8 @@ abstract class DancijiyiDatabase : RoomDatabase() {
                 context.applicationContext,
                 DancijiyiDatabase::class.java,
                 DB_NAME,
-            ).build()
+            )
+                .addMigrations(MIGRATION_1_2)
+                .build()
     }
 }

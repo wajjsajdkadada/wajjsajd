@@ -3,7 +3,9 @@ package com.dancijiyi.app.di
 import android.content.Context
 import com.dancijiyi.data.importer.WordImportRunner
 import com.dancijiyi.data.local.DancijiyiDatabase
+import com.dancijiyi.data.repository.RoomReviewQueueRepository
 import com.dancijiyi.data.repository.RoomWordRepository
+import com.dancijiyi.domain.repository.ReviewQueueRepository
 import com.dancijiyi.domain.repository.WordRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,4 +32,9 @@ class AppContainer(context: Context) {
 
     /** 词库导入执行器：流式解析 + 分批入库 + 进度回调 */
     val importRunner: WordImportRunner by lazy { WordImportRunner(repository, clock) }
+
+    /** 复习队列引擎：会话建队、作答结算、队列持久化 */
+    val reviewQueueRepository: ReviewQueueRepository by lazy {
+        RoomReviewQueueRepository(database, clock)
+    }
 }

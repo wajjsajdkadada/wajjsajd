@@ -34,6 +34,11 @@
             android:label="单词详情"
             android:parentActivityName=".ui.wordlist.WordListActivity" />
 
+        <activity
+            android:name=".ui.review.ReviewActivity"
+            android:exported="false"
+            android:label="今日复习" />
+
     </application>
 
 </manifest>

@@ -4,6 +4,7 @@ import com.dancijiyi.data.local.entity.ReviewLogEntity
 import com.dancijiyi.data.local.entity.ReviewStateEntity
 import com.dancijiyi.data.local.entity.WordEntity
 import com.dancijiyi.data.local.entity.WordbookEntity
+import com.dancijiyi.data.local.projection.QueueItemRow
 import com.dancijiyi.data.local.projection.WordStateRow
 import com.dancijiyi.data.local.projection.WordbookStatsRow
 import com.dancijiyi.domain.model.ReviewLogDraft
@@ -106,6 +107,36 @@ fun ReviewLogEntity.toDomain(): ReviewRecord = ReviewRecord(
     durationMs = durationMs,
     reviewedAt = reviewedAt.toInstant(),
 )
+
+/** 队列项投影 → 词 + 状态（兜底逻辑与 [WordStateRow.toDomain] 一致） */
+fun QueueItemRow.toWordWithState(fallbackNow: Instant): WordWithState {
+    val domainWord = word.toDomain()
+    val due = nextDueAt
+    val state = if (due == null) {
+        ReviewState(
+            wordId = domainWord.id,
+            stage = 0,
+            easeFactor = 2.50,
+            lapseCount = 0,
+            reviewCount = 0,
+            lastReviewedAt = null,
+            nextDueAt = fallbackNow,
+            isMastered = false,
+        )
+    } else {
+        ReviewState(
+            wordId = domainWord.id,
+            stage = stage ?: 0,
+            easeFactor = easeFactor ?: 2.50,
+            lapseCount = lapseCount ?: 0,
+            reviewCount = reviewCount ?: 0,
+            lastReviewedAt = lastReviewedAt?.toInstant(),
+            nextDueAt = due.toInstant(),
+            isMastered = isMastered ?: false,
+        )
+    }
+    return WordWithState(word = domainWord, state = state)
+}
 
 fun WordStateRow.toDomain(fallbackNow: Instant): WordWithState {
     val word = word.toDomain()

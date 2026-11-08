@@ -15,6 +15,7 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.dancijiyi.app.ui.review.ReviewActivity
 import com.dancijiyi.app.ui.wordlist.WordListActivity
 import com.dancijiyi.app.ui.imports.ImportActivity
 import com.dancijiyi.app.ui.demo.DemoUiState
@@ -138,6 +139,13 @@ class MainActivity : ComponentActivity() {
             addView(listView)
         }
         root.addView(scroll)
+
+        root.addView(Button(this).apply {
+            text = "开始复习（队列）"
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, ReviewActivity::class.java))
+            }
+        })
 
         root.addView(Button(this).apply {
             text = "单词列表（RecyclerView）"
