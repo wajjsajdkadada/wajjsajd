@@ -1,5 +1,6 @@
 package com.dancijiyi.app.ui.imports
 
+import android.app.AlertDialog
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
@@ -13,6 +14,7 @@ import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -20,7 +22,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.dancijiyi.app.DanCiJiYiApp
+import com.dancijiyi.app.perm.StoragePermission
 import kotlinx.coroutines.launch
+import java.io.FileInputStream
 import java.util.Locale
 
 /**
@@ -98,6 +102,89 @@ class ImportActivity : ComponentActivity() {
         viewModel.onFilePicked("template.csv（内置示例）", -1L) { assets.open("template.csv") }
     }
 
+    // ---------------- 存储权限（旧系统兼容通道） ----------------
+
+    private val requestStorage =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                showDownloadCsvPicker()
+            } else {
+                showPermissionDeniedDialog()
+            }
+        }
+
+    private fun onLegacyImportClick() {
+        if (!StoragePermission.isLegacyChannelAvailable()) {
+            Toast.makeText(this, "当前系统请用「选择 CSV 文件」，不需要存储权限", Toast.LENGTH_SHORT).show()
+            return
+        }
+        when {
+            StoragePermission.isGranted(this) -> showDownloadCsvPicker()
+
+            // 用户之前拒绝过 → 必须先解释「为什么要这个权限」，再申请
+            shouldShowRequestPermissionRationale(StoragePermission.permission) -> showRationaleDialog()
+
+            else -> requestStorage.launch(StoragePermission.permission)
+        }
+    }
+
+    /** rationale：说清「为什么需要」＋「不给也能用」，而不是硬要权限 */
+    private fun showRationaleDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("需要存储权限")
+            .setMessage(
+                "用途：列出「下载」目录里的 CSV 词库文件，直接读取。\n\n" +
+                    "你可以不给这个权限——改用系统文件选择器导入，或者手动逐个添加单词，功能同样能用。",
+            )
+            .setPositiveButton("去授权") { _, _ -> requestStorage.launch(StoragePermission.permission) }
+            .setNegativeButton("用系统选择器") { _, _ -> openDocument.launch(OPEN_MIME) }
+            .setNeutralButton("手动添加") { _, _ ->
+                ManualWordDialog.show(this) { viewModel.addManualWord(it) }
+            }
+            .show()
+    }
+
+    /** 拒绝后的降级：给两条不需要权限的路 */
+    private fun showPermissionDeniedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("没有读取权限")
+            .setMessage(
+                "无法列出「下载」目录里的文件。以下两种方式都不需要权限：\n" +
+                    "· 用系统文件选择器导入 CSV\n" +
+                    "· 手动逐个添加单词",
+            )
+            .setPositiveButton("手动添加") { _, _ ->
+                ManualWordDialog.show(this) { viewModel.addManualWord(it) }
+            }
+            .setNeutralButton("用系统选择器") { _, _ -> openDocument.launch(OPEN_MIME) }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun showDownloadCsvPicker() {
+        val files = LegacyCsvScanner.listDownloadCsv()
+        if (files.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("下载目录里没有 CSV 文件")
+                .setMessage("可以先用「选择 CSV 文件」，或手动添加单词。")
+                .setPositiveButton("手动添加") { _, _ ->
+                    ManualWordDialog.show(this) { viewModel.addManualWord(it) }
+                }
+                .setNegativeButton("知道了", null)
+                .show()
+            return
+        }
+        val labels = files.map { "${it.name}（${it.length() / 1024} KB）" }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("选择下载目录里的 CSV")
+            .setItems(labels) { _, which ->
+                val file = files[which]
+                viewModel.onFilePicked(file.name, file.length()) { FileInputStream(file) }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
     // ---------------- UI ----------------
 
     private fun buildContentView(): ScrollView {
@@ -138,6 +225,23 @@ class ImportActivity : ComponentActivity() {
             setOnClickListener { importSample() }
         })
         root.addView(pickRow)
+
+        // 旧系统兼容通道（API ≤ 32 才显示）+ 权限被拒后的降级入口
+        if (StoragePermission.isLegacyChannelAvailable()) {
+            root.addView(Button(this).apply {
+                text = "从下载目录读取（需存储权限）"
+                setOnClickListener { onLegacyImportClick() }
+            })
+        }
+
+        root.addView(Button(this).apply {
+            text = "手动添加单词（无需任何权限）"
+            setOnClickListener {
+                ManualWordDialog.show(this@ImportActivity) { draft ->
+                    viewModel.addManualWord(draft)
+                }
+            }
+        })
 
         hintText = TextView(this).apply {
             textSize = 13f
@@ -332,6 +436,17 @@ class ImportActivity : ComponentActivity() {
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private companion object {
+        /** SAF 的 MIME 过滤：宁可放宽，再靠扩展名与内容嗅探校验 */
+        val OPEN_MIME = arrayOf(
+            "text/*",
+            "application/csv",
+            "text/plain",
+            "application/octet-stream",
+            "*/*",
+        )
+    }
 
     /** 避免匿名类噪音的小工具 */
     private class SimpleItemSelected(

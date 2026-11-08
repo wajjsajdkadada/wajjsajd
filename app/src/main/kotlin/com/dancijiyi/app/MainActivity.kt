@@ -52,6 +52,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(buildContentView())
 
+        // 崩溃兜底：上次异常退出时给用户一个可见的交代，并附最近一条堆栈
+        (application as DanCiJiYiApp).readCrashLog()?.let { report ->
+            android.app.AlertDialog.Builder(this)
+                .setTitle("上次运行异常退出")
+                .setMessage("已记录崩溃日志，可反馈给开发者：\n\n" + report.takeLast(1200))
+                .setPositiveButton("知道了") { _, _ ->
+                    (application as DanCiJiYiApp).clearCrashLog()
+                }
+                .setCancelable(false)
+                .show()
+        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { render(it) }

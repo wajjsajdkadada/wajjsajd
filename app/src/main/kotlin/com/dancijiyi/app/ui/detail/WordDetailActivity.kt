@@ -40,6 +40,7 @@ class WordDetailActivity : ComponentActivity() {
     }
 
     private lateinit var headerTitle: TextView
+    private lateinit var detailLoading: android.widget.ProgressBar
     private lateinit var spelling: TextView
     private lateinit var phonetic: TextView
     private lateinit var status: TextView
@@ -61,6 +62,7 @@ class WordDetailActivity : ComponentActivity() {
         setContentView(R.layout.activity_word_detail)
 
         headerTitle = findViewById(R.id.headerTitle)
+        detailLoading = findViewById(R.id.detailLoading)
         spelling = findViewById(R.id.detailSpelling)
         phonetic = findViewById(R.id.detailPhonetic)
         status = findViewById(R.id.detailStatus)
@@ -96,6 +98,7 @@ class WordDetailActivity : ComponentActivity() {
     }
 
     private fun render(state: WordDetailUiState) {
+        detailLoading.visibility = if (state is WordDetailUiState.Loading) View.VISIBLE else View.GONE
         when (state) {
             WordDetailUiState.Loading -> headerTitle.text = "加载中…"
 

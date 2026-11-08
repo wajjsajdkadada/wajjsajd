@@ -9,6 +9,7 @@ import com.dancijiyi.app.di.AppContainer
 import com.dancijiyi.data.importer.WordImportRunner
 import com.dancijiyi.domain.model.ImportProgress
 import com.dancijiyi.domain.model.ImportReport
+import com.dancijiyi.domain.model.WordDraft
 import com.dancijiyi.domain.model.WordbookWithStats
 import com.dancijiyi.domain.repository.WordRepository
 import kotlinx.coroutines.CancellationException
@@ -160,6 +161,26 @@ class ImportViewModel(
             } catch (e: Exception) {
                 showError("导入中断", e.message ?: e::class.java.simpleName)
             }
+        }
+    }
+
+    /** 手动添加单词（权限被拒时的降级路径，不依赖任何权限） */
+    fun addManualWord(draft: WordDraft) {
+        val bookId = _state.value.selectedBookId
+        if (bookId == null) {
+            showError("还没有词库", "请先新建一个词库，再手动添加单词。")
+            return
+        }
+        viewModelScope.launch {
+            runCatching { repository.addWord(bookId, draft, Instant.now(clock)) }
+                .onSuccess {
+                    _state.update { s ->
+                        s.copy(hint = "已手动添加：${draft.spelling}（可继续添加）", phase = ImportUiState.Phase.IDLE)
+                    }
+                }
+                .onFailure { e ->
+                    _state.update { s -> s.copy(hint = "添加失败：${e.message}") }
+                }
         }
     }
 

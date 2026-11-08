@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+      存储权限：**只服务于 API ≤ 32 的「下载目录直读」兼容通道**。
+      主导入路径用 SAF（ACTION_OPEN_DOCUMENT），完全不需要该权限；
+      maxSdkVersion=32 保证 Android 13+ 不会申请一个已经失效的权限。
+    -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
         android:name=".DanCiJiYiApp"
         android:allowBackup="true"
