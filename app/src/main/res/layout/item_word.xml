@@ -43,6 +43,19 @@
             android:ellipsize="end" />
     </LinearLayout>
 
+    <!-- 朗读按钮：点击只读这个词，不进入详情（两者点击区域分开，避免误触） -->
+    <ImageView
+        android:id="@+id/wordSpeak"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="4dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:contentDescription="朗读这个单词"
+        android:focusable="true"
+        android:padding="6dp"
+        android:src="@drawable/ic_speaker" />
+
     <TextView
         android:id="@+id/wordBadge"
         android:layout_width="wrap_content"

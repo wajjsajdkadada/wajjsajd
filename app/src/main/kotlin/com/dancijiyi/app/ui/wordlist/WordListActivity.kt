@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
@@ -18,6 +19,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dancijiyi.app.DanCiJiYiApp
 import com.dancijiyi.app.R
+import com.dancijiyi.app.speech.SpeakOutcome
+import com.dancijiyi.app.speech.WordSpeaker
 import com.dancijiyi.app.ui.detail.WordDetailActivity
 import com.dancijiyi.domain.model.WordFilter
 import kotlinx.coroutines.launch
@@ -48,6 +51,15 @@ class WordListActivity : ComponentActivity() {
     private lateinit var stateAction: Button
     private lateinit var adapter: WordAdapter
 
+    /**
+     * 朗读器（懒加载）。
+     *
+     * 为什么懒加载：TTS 引擎是系统服务绑定，创建有开销；
+     * 用户可能只是想翻列表，一次都不点喇叭，那就没必要提前初始化。
+     * 但**初始化必须提前到 onCreate**（下面会调 initialize()），否则第一次点击会没声音。
+     */
+    private val speaker by lazy { WordSpeaker(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_word_list)
@@ -61,7 +73,13 @@ class WordListActivity : ComponentActivity() {
         stateText = findViewById(R.id.stateText)
         stateAction = findViewById(R.id.stateAction)
 
-        adapter = WordAdapter { wordId -> openDetail(wordId) }
+        // 提前创建引擎：TTS 初始化是异步的，放到第一次点击再初始化会"第一次没声音"
+        speaker.initialize()
+
+        adapter = WordAdapter(
+            onClick = { wordId -> openDetail(wordId) },
+            onSpeak = { item -> speakWord(item.word.spelling) },
+        )
         wordList.layoutManager = LinearLayoutManager(this)
         wordList.adapter = adapter
 
@@ -96,6 +114,30 @@ class WordListActivity : ComponentActivity() {
             Intent(this, WordDetailActivity::class.java)
                 .putExtra(WordDetailActivity.EXTRA_WORD_ID, wordId),
         )
+    }
+
+    /**
+     * 朗读并给出必要的降级提示。
+     *
+     * 为什么要判断返回值：设备缺英文语音包时 `speak()` 不会抛异常，只会"没有声音"，
+     * 用户会以为功能坏了。这里把三种失败都翻译成人话。
+     */
+    private fun speakWord(text: String) {
+        when (val outcome = speaker.speak(text)) {
+            SpeakOutcome.SPOKEN, SpeakOutcome.INITIALIZING -> Unit
+            SpeakOutcome.NO_ENGLISH_VOICE ->
+                Toast.makeText(this, "设备缺少英文语音包，请在系统设置里安装", Toast.LENGTH_SHORT).show()
+            SpeakOutcome.ENGINE_UNAVAILABLE ->
+                Toast.makeText(this, "朗读服务不可用，请检查系统的文字转语音设置", Toast.LENGTH_SHORT).show()
+            SpeakOutcome.EMPTY_WORD ->
+                Toast.makeText(this, "没有可朗读的内容", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // 必须释放：TTS 持有系统服务连接，不 shutdown 会泄漏（Activity 反复进出会越积越多）
+        speaker.shutdown()
     }
 
     private fun render(state: WordListUiState) {

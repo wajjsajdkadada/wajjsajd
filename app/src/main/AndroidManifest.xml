@@ -13,6 +13,17 @@
     <!-- 每日复习提醒（Android 13+ 需要运行时授予；拒绝后降级为「仅桌面小组件提醒」） -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!--
+      Android 11+ 的包可见性限制：不声明这段 queries，应用就查不到系统的 TTS 引擎，
+      TextToSpeech 会一直初始化失败（表现为「点朗读没声音」）。
+      注意：朗读本身**不需要任何权限**，这里只是让系统允许我们绑定 TTS 服务。
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".DanCiJiYiApp"
         android:allowBackup="true"

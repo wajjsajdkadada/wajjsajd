@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
@@ -15,6 +16,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.dancijiyi.app.DanCiJiYiApp
 import com.dancijiyi.app.R
+import com.dancijiyi.app.speech.SpeakOutcome
+import com.dancijiyi.app.speech.WordSpeaker
 import com.dancijiyi.domain.model.Quality
 import com.dancijiyi.domain.repository.SessionStats
 import kotlinx.coroutines.launch
@@ -61,6 +64,15 @@ class ReviewActivity : ComponentActivity() {
     private lateinit var qualityButtons: List<Button>
 
     private var showingBack = false
+
+    /** 当前卡片上的单词：朗读按钮与"翻面后是否自动再读"都要用 */
+    private var currentSpelling: String? = null
+
+    /** 用户是否用过朗读：用过之后，切到下一张卡自动读一次（不用反复点） */
+    private var autoSpeak = false
+
+    /** 朗读器：懒加载，initialize() 在 onCreate 提前调用 */
+    private val speaker by lazy { WordSpeaker(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,6 +136,13 @@ class ReviewActivity : ComponentActivity() {
         findViewById<Button>(R.id.stateAction).apply {
             text = "重试"
             setOnClickListener { viewModel.open() }
+        }
+
+        // 朗读：先初始化引擎；点一次之后记下"用户需要发音"，后续换卡自动读
+        speaker.initialize()
+        findViewById<android.widget.ImageButton>(R.id.btnSpeakReview).setOnClickListener {
+            autoSpeak = true
+            speakCurrentWord()
         }
 
         lifecycleScope.launch {
@@ -191,6 +210,12 @@ class ReviewActivity : ComponentActivity() {
                 }
 
                 frontSpelling.text = current?.spelling.orEmpty()
+                // 换了一张卡：更新当前单词，必要时自动朗读一次
+                val spellingChanged = current?.spelling != currentSpelling
+                currentSpelling = current?.spelling
+                if (spellingChanged && autoSpeak && !current?.spelling.isNullOrBlank()) {
+                    speaker.speak(current.spelling)
+                }
                 frontPhonetic.text = current?.phonetic.orEmpty()
                 frontPhonetic.visibility =
                     if (current?.phonetic.isNullOrBlank()) View.GONE else View.VISIBLE
@@ -267,6 +292,24 @@ class ReviewActivity : ComponentActivity() {
         deferredNotice.visibility = View.GONE
         progress.progress = 0
         count.text = ""
+    }
+
+    /** 朗读当前卡片上的单词并处理降级提示 */
+    private fun speakCurrentWord() {
+        val text = currentSpelling ?: return
+        when (speaker.speak(text)) {
+            SpeakOutcome.SPOKEN, SpeakOutcome.INITIALIZING -> Unit
+            SpeakOutcome.NO_ENGLISH_VOICE ->
+                Toast.makeText(this, "设备缺少英文语音包，请在系统设置里安装", Toast.LENGTH_SHORT).show()
+            SpeakOutcome.ENGINE_UNAVAILABLE ->
+                Toast.makeText(this, "朗读服务不可用，请检查系统的文字转语音设置", Toast.LENGTH_SHORT).show()
+            SpeakOutcome.EMPTY_WORD -> Unit
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        speaker.shutdown()
     }
 
     private companion object {

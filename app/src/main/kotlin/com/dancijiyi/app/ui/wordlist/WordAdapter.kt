@@ -17,6 +17,8 @@ import java.time.Instant
  */
 class WordAdapter(
     private val onClick: (wordId: Long) -> Unit,
+    /** 点击行内喇叭时回调（朗读这个单词），与整行点击互不干扰 */
+    private val onSpeak: (WordWithState) -> Unit = {},
 ) : ListAdapter<WordWithState, WordAdapter.WordViewHolder>(DIFF) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WordViewHolder {
@@ -25,7 +27,7 @@ class WordAdapter(
     }
 
     override fun onBindViewHolder(holder: WordViewHolder, position: Int) {
-        holder.bind(getItem(position), onClick)
+        holder.bind(getItem(position), onClick, onSpeak)
     }
 
     class WordViewHolder(view: android.view.View) : RecyclerView.ViewHolder(view) {
@@ -33,12 +35,20 @@ class WordAdapter(
         private val phonetic: android.widget.TextView = view.findViewById(R.id.wordPhonetic)
         private val meaning: android.widget.TextView = view.findViewById(R.id.wordMeaning)
         private val badge: android.widget.TextView = view.findViewById(R.id.wordBadge)
+        private val speak: android.widget.ImageView = view.findViewById(R.id.wordSpeak)
 
-        fun bind(item: WordWithState, onClick: (Long) -> Unit) {
+        fun bind(
+            item: WordWithState,
+            onClick: (Long) -> Unit,
+            onSpeak: (WordWithState) -> Unit,
+        ) {
             spelling.text = item.word.spelling
             phonetic.text = item.word.phonetic ?: ""
             phonetic.visibility = if (item.word.phonetic.isNullOrBlank()) android.view.View.GONE else android.view.View.VISIBLE
             meaning.text = item.word.meaning
+
+            // 行内朗读：单独监听器，不会冒泡到整行的 onClick
+            speak.setOnClickListener { onSpeak(item) }
 
             val state = item.state
             val now = Instant.now()

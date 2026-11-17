@@ -15,6 +15,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.dancijiyi.app.DanCiJiYiApp
 import com.dancijiyi.app.R
+import com.dancijiyi.app.speech.SpeakOutcome
+import com.dancijiyi.app.speech.WordSpeaker
 import com.dancijiyi.domain.model.ReviewRecord
 import com.dancijiyi.domain.model.ReviewState
 import kotlinx.coroutines.launch
@@ -57,6 +59,12 @@ class WordDetailActivity : ComponentActivity() {
 
     private var lastState: ReviewState? = null
 
+    /** 当前单词拼写：朗读按钮要用它，所以单独存一份（避免从 UI 层反查数据） */
+    private var currentSpelling: String? = null
+
+    /** 朗读器：懒加载，但 initialize() 放在 onCreate 提前调用 */
+    private val speaker by lazy { WordSpeaker(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_word_detail)
@@ -90,6 +98,12 @@ class WordDetailActivity : ComponentActivity() {
             lastState?.let { viewModel.toggleMastered(it) }
         }
 
+        // 朗读：提前初始化引擎，点击时直接读当前单词
+        speaker.initialize()
+        findViewById<android.widget.ImageButton>(R.id.btnSpeakDetail).setOnClickListener {
+            speakCurrentWord()
+        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { render(it) }
@@ -114,6 +128,7 @@ class WordDetailActivity : ComponentActivity() {
                 headerTitle.text = state.bookName ?: "单词详情"
 
                 spelling.text = state.word.spelling
+                currentSpelling = state.word.spelling
                 phonetic.text = state.word.phonetic.orEmpty()
                 phonetic.visibility = if (state.word.phonetic.isNullOrBlank()) View.GONE else View.VISIBLE
 
@@ -189,6 +204,24 @@ class WordDetailActivity : ComponentActivity() {
             days == 1L -> "明天"
             else -> "$days 天后"
         }
+    }
+
+    /** 朗读当前单词，并把三种失败翻译成用户能看懂的话 */
+    private fun speakCurrentWord() {
+        val text = currentSpelling ?: return
+        when (speaker.speak(text)) {
+            SpeakOutcome.SPOKEN, SpeakOutcome.INITIALIZING -> Unit
+            SpeakOutcome.NO_ENGLISH_VOICE ->
+                Toast.makeText(this, "设备缺少英文语音包，请在系统设置里安装", Toast.LENGTH_SHORT).show()
+            SpeakOutcome.ENGINE_UNAVAILABLE ->
+                Toast.makeText(this, "朗读服务不可用，请检查系统的文字转语音设置", Toast.LENGTH_SHORT).show()
+            SpeakOutcome.EMPTY_WORD -> Unit
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        speaker.shutdown()
     }
 
     companion object {

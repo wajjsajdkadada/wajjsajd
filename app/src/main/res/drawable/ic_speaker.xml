@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 喇叭图标：用于列表行、详情页、复习卡片的朗读按钮 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 喇叭本体 -->
+    <path
+        android:fillColor="#FF2E7D6E"
+        android:pathData="M3,9v6h4l5,4V5L7,9H3z" />
+    <!-- 两道声波 -->
+    <path
+        android:fillColor="#FF2E7D6E"
+        android:pathData="M14.5,8.5c1.2,1.2 1.2,5.8 0,7l1.4,1.4c2,-2 2,-9.8 0,-11.8z" />
+    <path
+        android:fillColor="#FF2E7D6E"
+        android:pathData="M17.5,5.5c2.8,2.8 2.8,10.2 0,13l1.4,1.4c3.6,-3.6 3.6,-12.2 0,-15.8z" />
+</vector>
