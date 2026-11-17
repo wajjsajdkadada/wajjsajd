@@ -1,6 +1,8 @@
 package com.dancijiyi.app.speech
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioManager
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import java.util.Locale
@@ -55,6 +57,14 @@ class WordSpeaker(context: Context) {
     /** 初始化未完成时暂存的单词：就绪后补读，避免"第一次点没反应" */
     private var pendingWord: String? = null
 
+    /**
+     * 说明：原本想用 [android.media.audiofx.LoudnessEnhancer] 给 TTS 音频会话加 +12dB 增益，
+     * 但 `TextToSpeech` **没有公开 audioSessionId**（只有内部 getAudioSessionId），
+     * 拿不到会话 id 就无法挂音效。所以改为「抬系统媒体音量」来保证可听度，
+     * 代价是会影响用户的其他媒体音量——因此必须带 FLAG_SHOW_UI，让用户看到并可调回。
+     */
+
+
     /** 创建引擎。重复调用无副作用（幂等），便于在 onCreate 里无脑调用。 */
     fun initialize() {
         if (tts != null) return
@@ -82,6 +92,15 @@ class WordSpeaker(context: Context) {
         } else {
             Log.w(TAG, "设备缺少英文语音包，languageResult=$languageResult")
         }
+
+        // 明确告诉系统这是「语音内容、按媒体通道播放」：
+        // 不设置的话部分 ROM 会按通知/系统提示音通道走，音量取决于另一个滑块，听起来就会很小。
+        engine.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build(),
+        )
 
         engineReady = true
 
@@ -115,9 +134,41 @@ class WordSpeaker(context: Context) {
             return SpeakOutcome.NO_ENGLISH_VOICE
         }
 
+        // 媒体音量过低时先抬一档，并弹出系统音量条让用户知道发生了什么
+        ensureAudibleVolume()
+
         // QUEUE_FLUSH：连续点多行单词时，后一个立刻打断前一个，不会排队读到上一行去
         val result = engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "$UTTERANCE_PREFIX$text")
         return if (result == TextToSpeech.SUCCESS) SpeakOutcome.SPOKEN else SpeakOutcome.ENGINE_UNAVAILABLE
+    }
+
+    /**
+     * 媒体音量低于 80% 时抬到 80%。
+     *
+     * 为什么带 FLAG_SHOW_UI：改用户音量必须让用户看得见——
+     * 否则他会觉得"这 App 偷偷把我声音调了"。弹出系统音量条，用户随时可以再调回去。
+     *
+     * 为什么是 80% 而不是 100%：留一点余量，避免用户在嘈杂环境再往上调时没有空间，
+     * 也避免部分设备在满格时出现削波失真。
+     */
+    private fun ensureAudibleVolume() {
+        val audioManager = appContext.getSystemService(AudioManager::class.java) ?: return
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        if (max <= 0) return
+        val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        val target = (max * 0.8f).toInt().coerceAtLeast(1)
+        if (current < target) {
+            audioManager.setStreamVolume(
+                AudioManager.STREAM_MUSIC,
+                target,
+                AudioManager.FLAG_SHOW_UI,
+            )
+        }
+    }
+
+    private fun releaseEnhancer() {
+        // 预留：若将来改用 synthesizeToFile + MediaPlayer 自行播放，
+        // 就能拿到自己生成的 audioSessionId 并挂 LoudnessEnhancer 做真正的增益。
     }
 
     /** Activity/Fragment 销毁时调用：停止播放并释放系统服务绑定 */
