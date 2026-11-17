@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  顶部渐变头部：青绿 → 深青，只在下半部分做圆角（上沿贴住状态栏，不需要圆角）。
+  为什么用渐变：纯色块会显得"平"，一个 135° 的渐变色就能拉开层次，且不需要任何图片资源。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:endColor="#FF1F5F54"
+        android:startColor="#FF2E7D6E"
+        android:type="linear" />
+    <corners
+        android:bottomLeftRadius="@dimen/radius_l"
+        android:bottomRightRadius="@dimen/radius_l" />
+</shape>
