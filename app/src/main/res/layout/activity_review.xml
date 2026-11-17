@@ -130,6 +130,18 @@
                     android:gravity="center"
                     android:textColor="#777777" />
 
+                <!-- 朗读例句：背面已经看到完整例句，读一遍帮助"整句输入" -->
+                <ImageButton
+                    android:id="@+id/btnSpeakExampleBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:contentDescription="朗读例句"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_speaker"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/backTranslation"
                     android:layout_width="match_parent"

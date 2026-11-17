@@ -99,13 +99,32 @@
             android:layout_height="wrap_content"
             android:textSize="17sp" />
 
-        <TextView
+        <!-- 例句标题 + 朗读例句：只在有例句时显示（Activity 里控制可见性） -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="例句"
-            android:textSize="13sp"
-            android:textColor="#888888" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="例句"
+                android:textSize="13sp"
+                android:textColor="#888888" />
+
+            <ImageButton
+                android:id="@+id/btnSpeakExample"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_button_secondary"
+                android:contentDescription="朗读例句"
+                android:padding="8dp"
+                android:src="@drawable/ic_speaker"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/detailExample"

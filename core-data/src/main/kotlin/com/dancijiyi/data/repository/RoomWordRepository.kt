@@ -187,10 +187,14 @@ class RoomWordRepository(
                                     existing.copy(
                                         spelling = spelling,
                                         spellingLower = spelling.lowercase(),
-                                        phonetic = draft.phonetic?.trim()?.ifEmpty { null },
+                                        // ⚠️ 合并而不是覆盖：新文件里没填的列要保留旧值。
+                                        // 否则用「只有 word,meaning 两列」的 CSV 再导一次，
+                                        // 会把之前补好的音标/例句/例句翻译全部清空。
+                                        phonetic = draft.phonetic?.trim()?.ifEmpty { null } ?: existing.phonetic,
                                         meaning = meaning,
-                                        example = draft.example?.trim()?.ifEmpty { null },
-                                        exampleTranslation = draft.exampleTranslation?.trim()?.ifEmpty { null },
+                                        example = draft.example?.trim()?.ifEmpty { null } ?: existing.example,
+                                        exampleTranslation = draft.exampleTranslation?.trim()?.ifEmpty { null }
+                                            ?: existing.exampleTranslation,
                                         updatedAt = now.toEpochMilli(),
                                     ),
                                 )

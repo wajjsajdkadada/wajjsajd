@@ -62,6 +62,9 @@ class WordDetailActivity : ComponentActivity() {
     /** 当前单词拼写：朗读按钮要用它，所以单独存一份（避免从 UI 层反查数据） */
     private var currentSpelling: String? = null
 
+    /** 当前例句：例句朗读按钮用；为空时按钮隐藏 */
+    private var currentExample: String? = null
+
     /** 朗读器：懒加载，但 initialize() 放在 onCreate 提前调用 */
     private val speaker by lazy { WordSpeaker(this) }
 
@@ -103,6 +106,10 @@ class WordDetailActivity : ComponentActivity() {
         findViewById<android.widget.ImageButton>(R.id.btnSpeakDetail).setOnClickListener {
             speakCurrentWord()
         }
+        // 朗读例句：没有例句时按钮保持隐藏（在 render 里控制）
+        findViewById<android.widget.ImageButton>(R.id.btnSpeakExample).setOnClickListener {
+            currentExample?.let { speakText(it) }
+        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -142,6 +149,10 @@ class WordDetailActivity : ComponentActivity() {
                 )
 
                 meaning.text = state.word.meaning
+                currentExample = state.word.example?.takeIf { it.isNotBlank() }
+                // 没有例句就隐藏「朗读例句」按钮，避免点了没反应
+                findViewById<android.widget.ImageButton>(R.id.btnSpeakExample).visibility =
+                    if (currentExample == null) View.GONE else View.VISIBLE
                 example.text = state.word.example ?: "（暂无例句）"
                 exampleTranslation.text = state.word.exampleTranslation.orEmpty()
                 exampleTranslation.visibility =
@@ -206,9 +217,13 @@ class WordDetailActivity : ComponentActivity() {
         }
     }
 
-    /** 朗读当前单词，并把三种失败翻译成用户能看懂的话 */
+    /** 朗读当前单词 */
     private fun speakCurrentWord() {
-        val text = currentSpelling ?: return
+        currentSpelling?.let { speakText(it) }
+    }
+
+    /** 朗读任意文本，并把三种失败翻译成用户能看懂的话（单词与例句共用） */
+    private fun speakText(text: String) {
         when (speaker.speak(text)) {
             SpeakOutcome.SPOKEN, SpeakOutcome.INITIALIZING -> Unit
             SpeakOutcome.NO_ENGLISH_VOICE ->

@@ -68,6 +68,9 @@ class ReviewActivity : ComponentActivity() {
     /** 当前卡片上的单词：朗读按钮与"翻面后是否自动再读"都要用 */
     private var currentSpelling: String? = null
 
+    /** 当前卡片上的例句：背面「朗读例句」按钮用 */
+    private var currentExample: String? = null
+
     /** 用户是否用过朗读：用过之后，切到下一张卡自动读一次（不用反复点） */
     private var autoSpeak = false
 
@@ -143,6 +146,10 @@ class ReviewActivity : ComponentActivity() {
         findViewById<android.widget.ImageButton>(R.id.btnSpeakReview).setOnClickListener {
             autoSpeak = true
             speakCurrentWord()
+        }
+        // 朗读例句（背面）：读到整句比只读单词更接近真实记忆场景
+        findViewById<android.widget.ImageButton>(R.id.btnSpeakExampleBack).setOnClickListener {
+            currentExample?.let { speakText(it) }
         }
 
         lifecycleScope.launch {
@@ -224,6 +231,10 @@ class ReviewActivity : ComponentActivity() {
                 backMeaning.text = current?.meaning.orEmpty()
                 backExample.text = current?.example.orEmpty()
                 backExample.visibility = if (current?.example.isNullOrBlank()) View.GONE else View.VISIBLE
+                // 例句朗读按钮：没有例句就隐藏
+                currentExample = current?.example?.takeIf { it.isNotBlank() }
+                findViewById<android.widget.ImageButton>(R.id.btnSpeakExampleBack).visibility =
+                    if (currentExample == null) View.GONE else View.VISIBLE
                 backTranslation.text = current?.exampleTranslation.orEmpty()
                 backTranslation.visibility =
                     if (current?.exampleTranslation.isNullOrBlank()) View.GONE else View.VISIBLE
@@ -294,9 +305,13 @@ class ReviewActivity : ComponentActivity() {
         count.text = ""
     }
 
-    /** 朗读当前卡片上的单词并处理降级提示 */
+    /** 朗读当前卡片上的单词 */
     private fun speakCurrentWord() {
-        val text = currentSpelling ?: return
+        currentSpelling?.let { speakText(it) }
+    }
+
+    /** 朗读任意文本（单词与例句共用），失败时给出可理解的提示 */
+    private fun speakText(text: String) {
         when (speaker.speak(text)) {
             SpeakOutcome.SPOKEN, SpeakOutcome.INITIALIZING -> Unit
             SpeakOutcome.NO_ENGLISH_VOICE ->
